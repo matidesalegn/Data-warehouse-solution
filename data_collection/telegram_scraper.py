@@ -53,7 +53,7 @@ image_channels = channel_usernames
 async def scrape_telegram_channels(min_id=None):
     all_messages = []
     for username in channel_usernames:
-        async for message in client.iter_messages(username, min_id=min_id):
+        async for message in client.iter_messages(username, min_id=min_id or 0):
             all_messages.append({
                 'sender_id': message.sender_id,
                 'message_text': message.text
