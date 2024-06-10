@@ -167,3 +167,4 @@ https://sphmmc.edu.et/2024/05/10/to-all-nmei-applicant/
 2024-06-10 09:52:33,909 __main__ INFO Stored 400 messages to raw_data/messages.csv
 2024-06-10 09:52:33,909 telethon.network.mtprotosender INFO Disconnecting from 149.154.167.91:443/TcpFull...
 2024-06-10 09:52:33,911 telethon.network.mtprotosender INFO Disconnection from 149.154.167.91:443/TcpFull complete!
+2024-06-10 13:21:56,847 __main__ ERROR No Telegram channel or batch file provided
