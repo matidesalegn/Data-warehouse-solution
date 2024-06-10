@@ -4,3 +4,4 @@ scrapy
 selenium 
 requests 
 telethon
+pyyaml
