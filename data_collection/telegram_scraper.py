@@ -5,6 +5,7 @@ import logging.config
 import yaml
 import argparse
 from telethon import TelegramClient
+import uuid  # Import UUID for generating unique identifiers
 
 # Ensure necessary directories exist
 os.makedirs('logs', exist_ok=True)
@@ -47,31 +48,38 @@ else:
     logger.error("No Telegram channel or batch file provided")
     exit(1)
 
-# Channels to collect images from (as an example, using the same channels)
-image_channels = channel_usernames
+# Channels to collect images from (specific channels)
+image_channels = ['CheMed123', 'lobelia4cosmetics']
 
 async def scrape_telegram_channels(min_id=None):
     all_messages = []
     for username in channel_usernames:
         async for message in client.iter_messages(username, min_id=min_id or 0):
+            message_id = str(uuid.uuid4())  # Generate a unique identifier
             all_messages.append({
+                'message_id': message_id,  # Store the unique identifier
                 'sender_id': message.sender_id,
-                'message_text': message.text
+                'message_text': message.text,
+                'channel': username
             })
             logger.info(f"Scraped message from {username}: {message.text}")
     return all_messages
 
 async def scrape_images(min_id=None):
     for username in image_channels:
-        async for message in client.iter_messages(username, min_id=min_id):
-            if message.photo:
-                path = await message.download_media(file='raw_data/images/')
-                logger.info(f"Downloaded image from {username}: {path}")
+        if username in channel_usernames:
+            async for message in client.iter_messages(username, min_id=min_id or 0):
+                if message.photo:
+                    # Generate a unique identifier for the image
+                    message_id = str(uuid.uuid4())
+                    # Save image with unique identifier and channel name as prefix
+                    path = await message.download_media(file=f'raw_data/images/{username}_{message_id}.jpg')
+                    logger.info(f"Downloaded image from {username}: {path}")
 
 def store_data(messages, filepath='raw_data/messages.csv'):
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     with open(filepath, mode='w', newline='', encoding='utf-8') as file:
-        writer = csv.DictWriter(file, fieldnames=['sender_id', 'message_text'])
+        writer = csv.DictWriter(file, fieldnames=['message_id', 'sender_id', 'message_text', 'channel'])
         writer.writeheader()
         for message in messages:
             writer.writerow(message)

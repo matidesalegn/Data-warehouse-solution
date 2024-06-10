@@ -5,3 +5,4 @@ selenium
 requests 
 telethon
 pyyaml
+dbt
