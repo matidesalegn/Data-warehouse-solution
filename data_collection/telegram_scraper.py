@@ -1,5 +1,6 @@
 import csv
 import logging
+import logging.config
 import yaml
 from telethon import TelegramClient
 
@@ -9,7 +10,6 @@ with open('logging_config.yaml', 'r') as file:
     logging.config.dictConfig(config)
 
 logger = logging.getLogger(__name__)
-
 # Telegram API credentials (replace with your own credentials)
 # Define API credentials
 api_id = '28036061'
