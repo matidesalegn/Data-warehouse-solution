@@ -11,8 +11,10 @@ with open('logging_config.yaml', 'r') as file:
 logger = logging.getLogger(__name__)
 
 # Telegram API credentials (replace with your own credentials)
-api_id = 'YOUR_API_ID'
-api_hash = 'YOUR_API_HASH'
+# Define API credentials
+api_id = '28036061'
+api_hash = '2400c765921b76f7cd50658053f0639b'
+phone = '+251974619952'
 
 # Telegram channels to scrape
 channel_usernames = [
