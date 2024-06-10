@@ -1,8 +1,12 @@
+import os
 import csv
 import logging
 import logging.config
 import yaml
 from telethon import TelegramClient
+
+# Ensure logs directory exists
+os.makedirs('logs', exist_ok=True)
 
 # Load logging configuration
 with open('logging_config.yaml', 'r') as file:
@@ -10,8 +14,8 @@ with open('logging_config.yaml', 'r') as file:
     logging.config.dictConfig(config)
 
 logger = logging.getLogger(__name__)
-# Telegram API credentials (replace with your own credentials)
-# Define API credentials
+
+# Telegram API credentials
 api_id = '28036061'
 api_hash = '2400c765921b76f7cd50658053f0639b'
 phone = '+251974619952'
@@ -36,6 +40,7 @@ async def scrape_telegram_channels():
     return all_messages
 
 def store_data(messages, filepath='raw_data/messages.csv'):
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
     with open(filepath, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.DictWriter(file, fieldnames=['sender_id', 'message_text'])
         writer.writeheader()
@@ -44,7 +49,7 @@ def store_data(messages, filepath='raw_data/messages.csv'):
     logger.info(f"Stored {len(messages)} messages to {filepath}")
 
 async def main():
-    await client.start()
+    await client.start(phone)
     messages = await scrape_telegram_channels()
     store_data(messages)
 
