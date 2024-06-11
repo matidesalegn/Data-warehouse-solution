@@ -1,9 +1,5 @@
 pandas
-beautifulsoup4 
-scrapy 
-selenium 
 requests 
 telethon
 pyyaml
 dbt
-nltk
