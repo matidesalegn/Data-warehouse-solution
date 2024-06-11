@@ -1,7 +1,6 @@
 import pandas as pd
 import re
 import string
-from collections import Counter
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 import nltk
@@ -14,7 +13,7 @@ class TelegramDataExtractor:
         self.file_path = file_path
         self.data = None
         self.cleaned_text = ""
-        self.keywords = Counter()
+        self.medical_keywords = ["equipment", "medicine", "medical", "doctor", "hospital", "pharmacy", "surgery", "clinic", "health", "treatment"]
 
     def load_data(self):
         """Load the CSV file into a pandas DataFrame."""
@@ -24,28 +23,32 @@ class TelegramDataExtractor:
 
     def clean_text(self):
         """Combine all messages and clean the text."""
-        combined_text = ' '.join(self.data['message_text'].astype(str))
+        self.data['cleaned_text'] = self.data['message_text'].astype(str)
         # Remove URLs
-        combined_text = re.sub(r'http\S+|www\S+|https\S+', '', combined_text, flags=re.MULTILINE)
+        self.data['cleaned_text'] = self.data['cleaned_text'].apply(lambda x: re.sub(r'http\S+|www\S+|https\S+', '', x, flags=re.MULTILINE))
         # Remove punctuation
-        combined_text = combined_text.translate(str.maketrans('', '', string.punctuation))
+        self.data['cleaned_text'] = self.data['cleaned_text'].apply(lambda x: x.translate(str.maketrans('', '', string.punctuation)))
         # Tokenize the text
-        tokens = word_tokenize(combined_text)
+        self.data['cleaned_text'] = self.data['cleaned_text'].apply(lambda x: word_tokenize(x))
         # Remove stopwords
         stop_words = set(stopwords.words('english'))
-        tokens = [word for word in tokens if word.lower() not in stop_words]
-        # Join the cleaned tokens
-        self.cleaned_text = ' '.join(tokens)
+        self.data['cleaned_text'] = self.data['cleaned_text'].apply(lambda x: [word for word in x if word.lower() not in stop_words])
+        # Join the cleaned tokens back into a string
+        self.data['cleaned_text'] = self.data['cleaned_text'].apply(lambda x: ' '.join(x))
         print("Text cleaned successfully.")
-        return self.cleaned_text
+        return self.data
 
-    # def extract_keywords(self, num_keywords=10):
-    #     """Extract and count the most frequent words."""
-    #     tokens = word_tokenize(self.cleaned_text)
-    #     self.keywords = Counter(tokens)
-    #     common_keywords = self.keywords.most_common(num_keywords)
-    #     print("Keywords extracted successfully.")
-    #     return common_keywords
+    def filter_medical_keywords(self):
+        """Filter and display messages related to the medical business."""
+        medical_messages = self.data[self.data['cleaned_text'].str.contains('|'.join(self.medical_keywords), case=False, na=False)]
+        print("Filtered medical-related messages:")
+        print(medical_messages)
+        return medical_messages
+
+    def save_to_csv(self, dataframe, output_filepath='filtered_medical_messages.csv'):
+        """Save the filtered medical-related messages to a CSV file."""
+        dataframe.to_csv(output_filepath, index=False)
+        print(f"Filtered medical messages saved to {output_filepath}")
 
     def display_data(self):
         """Display the first few rows of the dataframe."""
@@ -61,5 +64,6 @@ if __name__ == "__main__":
     extractor.load_data()
     extractor.display_data()
     extractor.clean_text()
-    keywords = extractor.extract_keywords(num_keywords=10)
-    print("Most common keywords:", keywords)
+    medical_messages = extractor.filter_medical_keywords()
+    extractor.save_to_csv(medical_messages, 'filtered_medical_messages.csv')
+    print("Filtered medical messages:", medical_messages)
