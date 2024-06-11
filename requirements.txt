@@ -6,3 +6,4 @@ requests
 telethon
 pyyaml
 dbt
+nltk
