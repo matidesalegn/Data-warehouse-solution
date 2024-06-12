@@ -4,4 +4,4 @@ sources:
   - name: public
     schema: public
     tables:
-      - name: messages_cleaned
+      - name: data_warehouse
