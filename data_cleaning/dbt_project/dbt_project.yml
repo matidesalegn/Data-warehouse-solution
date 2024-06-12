@@ -10,6 +10,10 @@ clean-targets:
   - 'dbt_modules'
 
 models:
-  my_project:
-    data_cleaning:
-      +enabled: true
+  dbt_project:
+    my_project:
+      data_cleaning:
+        +enabled: true
+          cleaned_data:
+            +enabled: true
+
