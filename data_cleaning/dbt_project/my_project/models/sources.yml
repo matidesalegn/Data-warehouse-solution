@@ -4,4 +4,4 @@ sources:
   - name: public
     schema: public
     tables:
-      - name: data_warehouse
+      - name: medical_data
