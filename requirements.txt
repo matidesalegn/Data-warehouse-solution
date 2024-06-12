@@ -2,5 +2,4 @@ pandas
 requests 
 telethon
 pyyaml
-dbt
 dbt-core dbt-postgres
