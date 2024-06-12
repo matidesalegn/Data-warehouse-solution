@@ -4,3 +4,9 @@
 2024-06-12 13:11:08,243 __main__ INFO Standardized formats
 2024-06-12 13:11:08,244 __main__ INFO Validated data
 2024-06-12 13:11:08,296 __main__ INFO Stored cleaned data to cleaned_data/messages_cleaned.csv
+2024-06-12 19:15:27,048 __main__ INFO Loaded data from ../data_cleaning/filtered_medical_messages.csv
+2024-06-12 19:15:27,074 __main__ INFO Removed duplicates
+2024-06-12 19:15:27,075 __main__ INFO Handled missing values
+2024-06-12 19:15:27,075 __main__ INFO Standardized formats
+2024-06-12 19:15:27,079 __main__ INFO Validated data
+2024-06-12 19:15:27,129 __main__ INFO Stored cleaned data to cleaned_data/messages_cleaned.csv
