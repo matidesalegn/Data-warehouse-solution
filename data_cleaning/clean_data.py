@@ -1,11 +1,12 @@
-import os
 import pandas as pd
+import os
 import logging
 import logging.config
 import yaml
 
 # Ensure necessary directories exist
 os.makedirs('logs', exist_ok=True)
+os.makedirs('cleaned_data', exist_ok=True)
 
 # Load logging configuration
 with open('logging_config.yaml', 'r') as file:
@@ -14,8 +15,7 @@ with open('logging_config.yaml', 'r') as file:
 
 logger = logging.getLogger(__name__)
 
-# Function to clean data
-def clean_data(input_filepath='raw_data/messages.csv', output_filepath='cleaned_data/messages_cleaned.csv'):
+def clean_data(input_filepath='../data_cleaning/filtered_medical_messages.csv', output_filepath='cleaned_data/messages_cleaned.csv'):
     # Read data
     try:
         df = pd.read_csv(input_filepath)
@@ -25,11 +25,11 @@ def clean_data(input_filepath='raw_data/messages.csv', output_filepath='cleaned_
         return
     
     # Remove duplicates
-    df.drop_duplicates(subset=['message_id'], inplace=True)
+    df.drop_duplicates(inplace=True)
     logger.info("Removed duplicates")
 
     # Handle missing values (e.g., drop rows with missing values)
-    df.dropna(subset=['message_text'], inplace=True)
+    df.dropna(inplace=True)
     logger.info("Handled missing values")
 
     # Standardize formats (e.g., trim whitespace)
@@ -41,7 +41,6 @@ def clean_data(input_filepath='raw_data/messages.csv', output_filepath='cleaned_
     logger.info("Validated data")
 
     # Store cleaned data
-    os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
     try:
         df.to_csv(output_filepath, index=False)
         logger.info(f"Stored cleaned data to {output_filepath}")
