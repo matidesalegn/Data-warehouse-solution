@@ -1,7 +1,7 @@
 -- models/transformed_data.sql
 with cleaned as (
     select *
-    from {{ ref('cleaned_data') }}
+    from {{ ref('messages_cleaned.csv') }}
 )
 
 select
