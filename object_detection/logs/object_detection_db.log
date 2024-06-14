@@ -2,3 +2,7 @@
 2024-06-14 20:10:28,652 ERROR:The directory ../yolov5/data/images does not exist.
 2024-06-14 20:12:06,571 ERROR:The directory D:\Data warehouse solution\yolov5\data\images does not exist.
 2024-06-14 20:15:43,865 INFO:Found 3382 images in D:\Data warehouse solution\object_detection\yolov5\data\images
+2024-06-14 20:33:39,426 INFO:Processed detection results for 1964 images
+2024-06-14 20:33:39,522 INFO:Connected to PostgreSQL database
+2024-06-14 20:33:39,542 INFO:Table detection_data is ready
+2024-06-14 20:33:39,833 INFO:Successfully inserted 1964 records into database
