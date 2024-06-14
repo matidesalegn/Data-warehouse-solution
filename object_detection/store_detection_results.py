@@ -6,6 +6,10 @@ import torch
 import psycopg2
 from pathlib import Path
 
+# Check and print the current working directory
+current_directory = os.getcwd()
+print(f'Current working directory: {current_directory}')
+
 # Configure logging
 os.makedirs('logs', exist_ok=True)
 logging.basicConfig(filename='logs/object_detection_db.log', level=logging.INFO,
@@ -84,23 +88,35 @@ def store_detection_data_to_database(conn, detection_data):
         logging.error(f'Error storing data to database: {str(e)}')
 
 if __name__ == '__main__':
-    image_directory = 'images'
-    image_paths = [os.path.join(image_directory, img) for img in os.listdir(image_directory) if img.endswith(('.jpg', '.jpeg', '.png'))]
+    # Update the path to the images directory
+    image_directory = 'D:/Data warehouse solution/object_detection/yolov5/data/images'
+    absolute_image_directory = os.path.abspath(image_directory)
+    print(f'Absolute path to images directory: {absolute_image_directory}')
 
-    if image_paths:
-        logging.info(f'Found {len(image_paths)} images in {image_directory}')
-
-        results = detect_objects_in_images(image_paths)
-        processed_results = process_detection_results(results)
-
-        logging.info(f'Processed detection results for {len(processed_results)} images')
-
-        conn = connect_to_db()
-        if conn:
-            create_table(conn)
-            store_detection_data_to_database(conn, processed_results)
-            conn.close()
-        else:
-            logging.error('Could not connect to database')
+    if not os.path.exists(absolute_image_directory):
+        logging.error(f'The directory {absolute_image_directory} does not exist.')
+        print(f'The directory {absolute_image_directory} does not exist.')
     else:
-        logging.warning(f'No images found in {image_directory}')
+        image_paths = [os.path.join(absolute_image_directory, img) for img in os.listdir(absolute_image_directory) if img.endswith(('.jpg', '.jpeg', '.png'))]
+
+        if image_paths:
+            logging.info(f'Found {len(image_paths)} images in {absolute_image_directory}')
+            print(f'Found {len(image_paths)} images in {absolute_image_directory}')
+
+            results = detect_objects_in_images(image_paths)
+            processed_results = process_detection_results(results)
+
+            logging.info(f'Processed detection results for {len(processed_results)} images')
+            print(f'Processed detection results for {len(processed_results)} images')
+
+            conn = connect_to_db()
+            if conn:
+                create_table(conn)
+                store_detection_data_to_database(conn, processed_results)
+                conn.close()
+            else:
+                logging.error('Could not connect to database')
+                print('Could not connect to database')
+        else:
+            logging.warning(f'No images found in {absolute_image_directory}')
+            print(f'No images found in {absolute_image_directory}')

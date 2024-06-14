@@ -1,0 +1,4 @@
+2024-06-14 20:04:11,414 ERROR:The directory ../yolov5/data/images does not exist.
+2024-06-14 20:10:28,652 ERROR:The directory ../yolov5/data/images does not exist.
+2024-06-14 20:12:06,571 ERROR:The directory D:\Data warehouse solution\yolov5\data\images does not exist.
+2024-06-14 20:15:43,865 INFO:Found 3382 images in D:\Data warehouse solution\object_detection\yolov5\data\images
