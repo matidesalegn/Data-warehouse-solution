@@ -1,110 +1,106 @@
-import psycopg2
-import logging
-import json
-from pathlib import Path
 import os
+import logging
+import yaml
+import cv2
+import torch
+import psycopg2
+from pathlib import Path
 
-# Create logging directory if it does not exist
-log_dir = '../logs'
-os.makedirs(log_dir, exist_ok=True)
+# Configure logging
+os.makedirs('logs', exist_ok=True)
+logging.basicConfig(filename='logs/object_detection_db.log', level=logging.INFO,
+                    format='%(asctime)s %(levelname)s:%(message)s')
 
-# Setup logging
-logging.basicConfig(filename=os.path.join(log_dir, 'detection.log'), level=logging.INFO,
-                    format='%(asctime)s %(levelname)s %(message)s')
+# Load configuration
+with open('config.yaml', 'r') as config_file:
+    config = yaml.safe_load(config_file)
 
-# Add a console handler to see logs in the console
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-console.setFormatter(formatter)
-logging.getLogger('').addHandler(console)
+db_config = config['postgres']
 
-# PostgreSQL connection parameters
-db_params = {
-    'dbname': 'data_warehouse',
-    'user': 'postgres',
-    'password': 'Mati@1993',
-    'host': 'localhost',
-    'port': 5432
-}
-
-# Connect to PostgreSQL
-try:
-    conn = psycopg2.connect(**db_params)
-    cur = conn.cursor()
-    logging.info("Connected to PostgreSQL database.")
-except Exception as e:
-    logging.error(f"Failed to connect to PostgreSQL database: {e}")
-    print(f"Failed to connect to PostgreSQL database: {e}")
-
-# Create table if not exists
-try:
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS detection_results (
-        id SERIAL PRIMARY KEY,
-        image_id TEXT,
-        class_label TEXT,
-        confidence FLOAT,
-        bounding_box INT[]
-    )
-    """)
-    conn.commit()
-    logging.info("Table detection_results is ready.")
-except Exception as e:
-    logging.error(f"Error creating table: {e}")
-    print(f"Error creating table: {e}")
-    conn.rollback()
-
-def store_detection_results(detections):
+def connect_to_db():
     try:
-        for detection in detections:
-            image_id = detection['image_id']
-            for det in detection['detections']:
-                class_label = det['class_label']
-                confidence = det['confidence']
-                bounding_box = det['bounding_box']
-                logging.info(f"Inserting detection: {image_id}, {class_label}, {confidence}, {bounding_box}")
-                print(f"Inserting detection: {image_id}, {class_label}, {confidence}, {bounding_box}")  # Print for debugging
-                cur.execute("""
-                INSERT INTO detection_results (image_id, class_label, confidence, bounding_box)
-                VALUES (%s, %s, %s, %s)
-                """, (image_id, class_label, confidence, bounding_box))
-        conn.commit()
-        logging.info("Detection results stored successfully.")
+        conn = psycopg2.connect(
+            dbname=db_config['dbname'],
+            user=db_config['user'],
+            password=db_config['password'],
+            host=db_config['host'],
+            port=db_config['port']
+        )
+        logging.info('Connected to PostgreSQL database')
+        return conn
     except Exception as e:
-        logging.error(f"Error storing detection results: {e}")
-        print(f"Error storing detection results: {e}")  # Print for debugging
-        conn.rollback()
+        logging.error(f'Error connecting to database: {str(e)}')
+        return None
 
-# Example detection results for testing
-detections = [
-    {
-        "image_id": "image_001",
-        "detections": [
-            {
-                "class_label": "person",
-                "confidence": 0.98,
-                "bounding_box": [100, 150, 200, 250]
-            },
-            {
-                "class_label": "bicycle",
-                "confidence": 0.87,
-                "bounding_box": [50, 80, 150, 200]
-            }
-        ]
-    }
-]
+def create_table(conn):
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS detection_data (
+                    id SERIAL PRIMARY KEY,
+                    image_path TEXT,
+                    box_coordinates TEXT,
+                    confidence_score FLOAT,
+                    class_label TEXT,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.commit()
+            logging.info('Table detection_data is ready')
+    except Exception as e:
+        logging.error(f'Error creating table: {str(e)}')
 
-# Store detection results
-store_detection_results(detections)
+def detect_objects_in_images(image_paths):
+    model = torch.hub.load('ultralytics/yolov5', 'yolov5s')  # Load YOLOv5s model
+    results = []
+    for image_path in image_paths:
+        img = cv2.imread(image_path)  # Read image using OpenCV
+        result = model(img)  # Perform object detection
+        results.append((image_path, result))
+    return results
 
-# Close connection
-try:
-    cur.close()
-    conn.close()
-    logging.info("PostgreSQL connection closed.")
-except Exception as e:
-    logging.error(f"Error closing PostgreSQL connection: {e}")
-    print(f"Error closing PostgreSQL connection: {e}")
+def process_detection_results(results):
+    processed_results = []
+    for image_path, result in results:
+        for *box, conf, cls in result.pred[0]:
+            box_coords = ','.join(map(str, box))
+            confidence_score = float(conf)
+            class_label = int(cls)
+            processed_results.append((image_path, box_coords, confidence_score, class_label))
+    return processed_results
 
-logging.info("Script execution completed.")
+def store_detection_data_to_database(conn, detection_data):
+    try:
+        with conn.cursor() as cursor:
+            insert_query = """
+                INSERT INTO detection_data (image_path, box_coordinates, confidence_score, class_label)
+                VALUES (%s, %s, %s, %s);
+            """
+            for data in detection_data:
+                cursor.execute(insert_query, data)
+            conn.commit()
+            logging.info(f'Successfully inserted {len(detection_data)} records into database')
+    except Exception as e:
+        logging.error(f'Error storing data to database: {str(e)}')
+
+if __name__ == '__main__':
+    image_directory = 'images'
+    image_paths = [os.path.join(image_directory, img) for img in os.listdir(image_directory) if img.endswith(('.jpg', '.jpeg', '.png'))]
+
+    if image_paths:
+        logging.info(f'Found {len(image_paths)} images in {image_directory}')
+
+        results = detect_objects_in_images(image_paths)
+        processed_results = process_detection_results(results)
+
+        logging.info(f'Processed detection results for {len(processed_results)} images')
+
+        conn = connect_to_db()
+        if conn:
+            create_table(conn)
+            store_detection_data_to_database(conn, processed_results)
+            conn.close()
+        else:
+            logging.error('Could not connect to database')
+    else:
+        logging.warning(f'No images found in {image_directory}')
