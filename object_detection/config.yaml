@@ -1,0 +1,6 @@
+postgres:
+  dbname: 'data_warehouse'
+  user: 'postgres'
+  password: 'Mati@1993'
+  host: 'localhost'
+  port: 5432

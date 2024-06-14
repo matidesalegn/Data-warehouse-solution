@@ -3,3 +3,4 @@ requests
 telethon
 pyyaml
 dbt-core dbt-postgres
+psycopg2

@@ -1,0 +1,7 @@
+2024-06-14 16:08:03,699 INFO Connected to PostgreSQL database.
+2024-06-14 16:08:03,699 INFO Table detection_results is ready.
+2024-06-14 16:08:03,699 INFO Inserting detection: image_001, person, 0.98, [100, 150, 200, 250]
+2024-06-14 16:08:03,712 INFO Inserting detection: image_001, bicycle, 0.87, [50, 80, 150, 200]
+2024-06-14 16:08:03,718 INFO Detection results stored successfully.
+2024-06-14 16:08:03,718 INFO PostgreSQL connection closed.
+2024-06-14 16:08:03,718 INFO Script execution completed.
