@@ -21,6 +21,18 @@ with open('config.yaml', 'r') as config_file:
 
 db_config = config['postgres']
 
+# COCO Class Names
+COCO_CLASSES = [
+    "person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat", "traffic light", "fire hydrant",
+    "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra",
+    "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball",
+    "kite", "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup",
+    "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza",
+    "donut", "cake", "chair", "sofa", "pottedplant", "bed", "diningtable", "toilet", "TVmonitor", "laptop", "mouse",
+    "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase",
+    "scissors", "teddy bear", "hair drier", "toothbrush"
+]
+
 def connect_to_db():
     try:
         conn = psycopg2.connect(
@@ -40,7 +52,7 @@ def create_table(conn):
     try:
         with conn.cursor() as cursor:
             cursor.execute("""
-                CREATE TABLE IF NOT EXISTS detection_data (
+                CREATE TABLE IF NOT EXISTS detection_datas (
                     id SERIAL PRIMARY KEY,
                     image_path TEXT,
                     box_coordinates TEXT,
@@ -50,7 +62,7 @@ def create_table(conn):
                 );
             """)
             conn.commit()
-            logging.info('Table detection_data is ready')
+            logging.info('Table detection_datas is ready')
     except Exception as e:
         logging.error(f'Error creating table: {str(e)}')
 
@@ -61,31 +73,36 @@ def detect_objects_in_images(image_paths):
         img = cv2.imread(image_path)  # Read image using OpenCV
         result = model(img)  # Perform object detection
         results.append((image_path, result))
+        logging.info(f"Detected objects in {image_path}")
     return results
 
 def process_detection_results(results):
     processed_results = []
     for image_path, result in results:
         for *box, conf, cls in result.pred[0]:
-            box_coords = ','.join(map(str, box))
+            # Convert tensor values to floats
+            box_coords = ','.join(map(lambda x: str(float(x)), box))
             confidence_score = float(conf)
-            class_label = int(cls)
+            class_label = COCO_CLASSES[int(cls)]  # Map class index to class name
             processed_results.append((image_path, box_coords, confidence_score, class_label))
+            logging.info(f"Processed detection: {image_path}, {box_coords}, {confidence_score}, {class_label}")
     return processed_results
 
-def store_detection_data_to_database(conn, detection_data):
+def store_detection_data_to_database(conn, detection_datas):
     try:
         with conn.cursor() as cursor:
             insert_query = """
-                INSERT INTO detection_data (image_path, box_coordinates, confidence_score, class_label)
+                INSERT INTO detection_datas (image_path, box_coordinates, confidence_score, class_label)
                 VALUES (%s, %s, %s, %s);
             """
-            for data in detection_data:
+            for data in detection_datas:
                 cursor.execute(insert_query, data)
+                logging.info(f"Inserting detection: {data}")
             conn.commit()
-            logging.info(f'Successfully inserted {len(detection_data)} records into database')
+            logging.info(f'Successfully inserted {len(detection_datas)} records into database')
     except Exception as e:
         logging.error(f'Error storing data to database: {str(e)}')
+        print(f'Error storing data to database: {str(e)}')  # Print for debugging
 
 if __name__ == '__main__':
     # Update the path to the images directory
