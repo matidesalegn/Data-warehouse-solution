@@ -12,6 +12,13 @@ os.makedirs(log_dir, exist_ok=True)
 logging.basicConfig(filename=os.path.join(log_dir, 'detection.log'), level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(message)s')
 
+# Add a console handler to see logs in the console
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+console.setFormatter(formatter)
+logging.getLogger('').addHandler(console)
+
 # PostgreSQL connection parameters
 db_params = {
     'dbname': 'data_warehouse',
@@ -28,6 +35,7 @@ try:
     logging.info("Connected to PostgreSQL database.")
 except Exception as e:
     logging.error(f"Failed to connect to PostgreSQL database: {e}")
+    print(f"Failed to connect to PostgreSQL database: {e}")
 
 # Create table if not exists
 try:
@@ -44,6 +52,7 @@ try:
     logging.info("Table detection_results is ready.")
 except Exception as e:
     logging.error(f"Error creating table: {e}")
+    print(f"Error creating table: {e}")
     conn.rollback()
 
 def store_detection_results(detections):
@@ -55,6 +64,7 @@ def store_detection_results(detections):
                 confidence = det['confidence']
                 bounding_box = det['bounding_box']
                 logging.info(f"Inserting detection: {image_id}, {class_label}, {confidence}, {bounding_box}")
+                print(f"Inserting detection: {image_id}, {class_label}, {confidence}, {bounding_box}")  # Print for debugging
                 cur.execute("""
                 INSERT INTO detection_results (image_id, class_label, confidence, bounding_box)
                 VALUES (%s, %s, %s, %s)
@@ -63,6 +73,7 @@ def store_detection_results(detections):
         logging.info("Detection results stored successfully.")
     except Exception as e:
         logging.error(f"Error storing detection results: {e}")
+        print(f"Error storing detection results: {e}")  # Print for debugging
         conn.rollback()
 
 # Example detection results for testing
@@ -88,6 +99,12 @@ detections = [
 store_detection_results(detections)
 
 # Close connection
-cur.close()
-conn.close()
-logging.info("PostgreSQL connection closed.")
+try:
+    cur.close()
+    conn.close()
+    logging.info("PostgreSQL connection closed.")
+except Exception as e:
+    logging.error(f"Error closing PostgreSQL connection: {e}")
+    print(f"Error closing PostgreSQL connection: {e}")
+
+logging.info("Script execution completed.")
