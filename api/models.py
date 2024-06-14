@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, Text, Float, TIMESTAMP
-from database import Base
+from api.database import Base  # Ensure correct import path
 
 class DetectionData(Base):
     __tablename__ = "detection_datas"

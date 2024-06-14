@@ -4,3 +4,7 @@ telethon
 pyyaml
 dbt-core dbt-postgres
 psycopg2
+fastapi 
+uvicorn 
+sqlalchemy 
+psycopg2-binary

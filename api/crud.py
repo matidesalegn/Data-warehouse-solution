@@ -1,4 +1,6 @@
 from sqlalchemy.orm import Session
+from api.models import DetectionData, MedicalData  # Adjust the import path
+from api.schemas import DetectionDataCreate, MedicalDataCreate  # Adjust the import path
 from models import DetectionData, MedicalData
 from schemas import DetectionDataCreate, MedicalDataCreate
 from database import SessionLocal
