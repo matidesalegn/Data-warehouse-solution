@@ -1,0 +1,144 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        component: [data_collection, data_cleaning, object_detection, api, data_warehouse]
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: medical_data_warehouse
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          cd ${{ matrix.component }}
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          deactivate
+
+      - name: Run tests
+        run: |
+          cd ${{ matrix.component }}
+          source venv/bin/activate
+          pytest tests/
+          deactivate
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/medical_data_warehouse
+
+  build_api:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: medical_data_warehouse
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Install API dependencies
+        run: |
+          cd api
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          deactivate
+
+      - name: Test API
+        run: |
+          cd api
+          source venv/bin/activate
+          pytest tests/
+          deactivate
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/medical_data_warehouse
+
+  build_data_warehouse:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: medical_data_warehouse
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Install data warehouse dependencies
+        run: |
+          cd data_warehouse
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          deactivate
+
+      - name: Test data warehouse
+        run: |
+          cd data_warehouse
+          source venv/bin/activate
+          pytest tests/
+          deactivate
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/medical_data_warehouse
