@@ -1,20 +1,24 @@
-from sqlalchemy import Column, Integer, Text, Float, TIMESTAMP
-from api.database import Base  # Ensure correct import path
+# models.py
+from sqlalchemy import Column, Integer, String, Float, Text, TIMESTAMP, UUID
+from sqlalchemy.sql import func
+from sqlalchemy.dialects.postgresql import UUID as pUUID
+import uuid
+from .database import Base
 
 class DetectionData(Base):
     __tablename__ = "detection_datas"
 
     id = Column(Integer, primary_key=True, index=True)
-    image_path = Column(Text)
-    box_coordinates = Column(Text)
-    confidence_score = Column(Float)
-    class_label = Column(Text)
-    timestamp = Column(TIMESTAMP, server_default='CURRENT_TIMESTAMP')
+    image_path = Column(Text, nullable=False)
+    box_coordinates = Column(Text, nullable=False)
+    confidence_score = Column(Float, nullable=False)
+    class_label = Column(Text, nullable=False)
+    timestamp = Column(TIMESTAMP, server_default=func.now())
 
 class MedicalData(Base):
     __tablename__ = "medical_datas"
 
-    message_id = Column(Text, primary_key=True, index=True)
-    sender_id = Column(Text)
-    message_text = Column(Text)
-    channel = Column(Text)
+    message_id = Column(pUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sender_id = Column(String, nullable=False)
+    message_text = Column(Text, nullable=False)
+    channel = Column(Text, nullable=False)

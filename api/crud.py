@@ -1,25 +1,25 @@
+# crud.py
 from sqlalchemy.orm import Session
-from api.models import DetectionData, MedicalData  # Adjust the import path
-from api.schemas import DetectionDataCreate, MedicalDataCreate  # Adjust the import path
-from models import DetectionData, MedicalData
-from schemas import DetectionDataCreate, MedicalDataCreate
-from database import SessionLocal
+from . import models, schemas
 
-def create_detection_data(db: Session, detection_data: DetectionDataCreate):
-    db_detection_data = DetectionData(**detection_data.dict())
+# CRUD operations for DetectionData
+def get_detection_datas(db: Session, skip: int = 0, limit: int = 10):
+    return db.query(models.DetectionData).offset(skip).limit(limit).all()
+
+def create_detection_data(db: Session, detection_data: schemas.DetectionDataCreate):
+    db_detection_data = models.DetectionData(**detection_data.dict())
     db.add(db_detection_data)
     db.commit()
     db.refresh(db_detection_data)
     return db_detection_data
 
-def create_medical_data(db: Session, medical_data: MedicalDataCreate):
-    db_medical_data = MedicalData(**medical_data.dict())
+# CRUD operations for MedicalData
+def get_medical_datas(db: Session, skip: int = 0, limit: int = 10):
+    return db.query(models.MedicalData).offset(skip).limit(limit).all()
+
+def create_medical_data(db: Session, medical_data: schemas.MedicalDataCreate):
+    db_medical_data = models.MedicalData(**medical_data.dict())
     db.add(db_medical_data)
     db.commit()
     db.refresh(db_medical_data)
-
-def get_detection_data(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(DetectionData).offset(skip).limit(limit).all()
-
-def get_medical_data(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(MedicalData).offset(skip).limit(limit).all()
+    return db_medical_data
